@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"net"
 	"strconv"
 	"strings"
@@ -29,7 +30,12 @@ const (
 	colorFgWhite
 )
 
+var Version = "0.0.0"
+
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "wgshow v%s\n\nUsage: wgshow { <interface> }\n", Version)
+	}
 	flag.Parse()
 
 	c, err := wgctrl.New()
@@ -53,26 +59,26 @@ func main() {
 		}
 	}
 
+	output := ""
 	for _, d := range devices {
-		printDevice(d)
+		output += formatDevice(d)
 
 		for _, p := range d.Peers {
-			printPeer(p)
+			output += formatPeer(p)
 		}
 	}
+
+	fmt.Print(strings.TrimSuffix(output, "\n"))
 }
 
-func printDevice(d *wgtypes.Device) {
-	output :=
-		greenBoldColor("interface") + ": " + greenColor(d.Name) + " (" + d.Type.String() + ")\n" +
-			"  " + boldColor("public key") + ": " + d.PublicKey.String() + "\n" +
-			"  " + boldColor("private key") + ": (hidden)\n" +
-			"  " + boldColor("listening port") + ": " + strconv.Itoa(d.ListenPort) + "\n\n"
-
-	fmt.Print(output)
+func formatDevice(d *wgtypes.Device) string {
+	return greenBoldColor("interface") + ": " + greenColor(d.Name) + " (" + d.Type.String() + ")\n" +
+		"  " + boldColor("public key") + ": " + d.PublicKey.String() + "\n" +
+		"  " + boldColor("private key") + ": (hidden)\n" +
+		"  " + boldColor("listening port") + ": " + strconv.Itoa(d.ListenPort) + "\n\n"
 }
 
-func printPeer(p wgtypes.Peer) {
+func formatPeer(p wgtypes.Peer) string {
 	output :=
 		yellowBoldColor("peer") + ": " + yellowColor(p.PublicKey.String()) + "\n" +
 			"  " + boldColor("endpoint") + ": " + p.Endpoint.String() + "\n" +
@@ -87,7 +93,7 @@ func printPeer(p wgtypes.Peer) {
 		"  " + boldColor("transfer") + ": " + formatBytes(p.ReceiveBytes) + " received, " + formatBytes(p.TransmitBytes) + " sent\n" +
 			"  " + boldColor("persistent keepalive") + ": every " + formatTimeUnit(int(p.PersistentKeepaliveInterval.Seconds()), "second") + "\n\n"
 
-	fmt.Print(output)
+	return output
 }
 
 func ipsString(ipns []net.IPNet) string {
@@ -163,9 +169,11 @@ func cyanColor(s string) string {
 
 func colorize(s string, style int, color int) string {
 	format := strconv.Itoa(style)
+	reset := strconv.Itoa(colorReset)
 	if color >= 30 {
-		format = ";" + strconv.Itoa(color)
+		format += ";" + strconv.Itoa(color)
+		reset += reset
 	}
 	
-	return fmt.Sprintf("%s[%sm%s%s[%dm", colorEscape, format, s, colorEscape, 0)
+	return fmt.Sprintf("%s[%sm%s%s[%sm", colorEscape, format, s, colorEscape, reset)
 }
