@@ -84,14 +84,15 @@ func formatPeer(p wgtypes.Peer) string {
 			"  " + boldColor("endpoint") + ": " + p.Endpoint.String() + "\n" +
 			"  " + boldColor("allowed ips") + ": " + strings.ReplaceAll(ipsString(p.AllowedIPs), "/", cyanColor("/")) + "\n"
 
-	if p.LastHandshakeTime.Second() > 0 {
+	if !p.LastHandshakeTime.IsZero() {
+		since := int(time.Since(p.LastHandshakeTime).Seconds())
 		output +=
-			"  " + boldColor("latest handshake") + ": " + formatTime(p.LastHandshakeTime) + " ago" + "\n"
+			"  " + boldColor("latest handshake") + ": " + formatDuration(since) + " ago" + "\n"
 	}
 
 	output +=
 		"  " + boldColor("transfer") + ": " + formatBytes(p.ReceiveBytes) + " received, " + formatBytes(p.TransmitBytes) + " sent\n" +
-			"  " + boldColor("persistent keepalive") + ": every " + formatTimeUnit(int(p.PersistentKeepaliveInterval.Seconds()), "second") + "\n\n"
+			"  " + boldColor("persistent keepalive") + ": every " + formatDuration(int(p.PersistentKeepaliveInterval.Seconds())) + "\n\n"
 
 	return output
 }
@@ -105,14 +106,20 @@ func ipsString(ipns []net.IPNet) string {
 	return strings.Join(ss, ", ")
 }
 
-func formatTime(t time.Time) string {
+func formatDuration(seconds int) string {
 	output := ""
 
-	if t.Minute() > 0 {
-		output += formatTimeUnit(t.Minute(), "minute") + " "
+	hours := int(seconds / 3600)
+	if hours > 0 {
+		output += formatTimeUnit(hours, "hour") + " "
 	}
 
-	output += formatTimeUnit(t.Second(), "second")
+	minutes := int(seconds  / 60 % 60)
+	if minutes > 0 {
+		output += formatTimeUnit(minutes, "minute") + " "
+	}
+	
+	output += formatTimeUnit(seconds % 60, "second")
 
 	return output
 }
