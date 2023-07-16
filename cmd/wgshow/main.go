@@ -113,17 +113,17 @@ func formatDuration(seconds int) string {
 	
 	days := int(seconds / dayInSeconds)
 	if days > 0 {
-		output += formatTimeUnit(days, "day") + " "
+		output += formatTimeUnit(days, "day") + ", "
 	}
 
 	hours := int(seconds % dayInSeconds / hoursInSeconds)
 	if hours > 0 {
-		output += formatTimeUnit(hours, "hour") + " "
+		output += formatTimeUnit(hours, "hour") + ", "
 	}
 
 	minutes := int(seconds / 60 % 60)
 	if minutes > 0 {
-		output += formatTimeUnit(minutes, "minute") + " "
+		output += formatTimeUnit(minutes, "minute") + ", "
 	}
 	
 	output += formatTimeUnit(seconds % 60, "second")
