@@ -109,12 +109,17 @@ func ipsString(ipns []net.IPNet) string {
 func formatDuration(seconds int) string {
 	output := ""
 
-	hours := int(seconds / 3600)
+	days := int(seconds / (24 * 3600))
+	if days > 0 {
+		output += formatTimeUnit(days, "day") + " "
+	}
+
+	hours := int(seconds / (60 * 60))
 	if hours > 0 {
 		output += formatTimeUnit(hours, "hour") + " "
 	}
 
-	minutes := int(seconds  / 60 % 60)
+	minutes := int(seconds / 60 % 60)
 	if minutes > 0 {
 		output += formatTimeUnit(minutes, "minute") + " "
 	}
